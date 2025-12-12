@@ -25,7 +25,7 @@ type WorkerStats struct {
 	TotRespSize  int64     `json:"tot_resp_size"`
 	TotDuration  int64     `json:"tot_duration"` // 纳秒
 	ErrMap       map[string]int `json:"err_map"`
-	Histogram    []byte    `json:"histogram"` // 序列化的直方图
+	Histogram    string    `json:"histogram"` // 序列化的直方图（JSON字符串）
 	StartTime    time.Time `json:"start_time"`
 	EndTime      time.Time `json:"end_time"`
 }

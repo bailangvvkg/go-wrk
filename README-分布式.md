@@ -1,14 +1,25 @@
-```
+```127.0.0.1:890
 # 默认
-docker run --rm bailangvvking/go-wrk:distributed /go-wrk -c 10 -d 10 http://example.com
+docker run --rm \
+--network host \
+bailangvvking/go-wrk:distributed /go-wrk -c 10 -d 10 http://example.com
 # 协调器
-docker run --rm bailangvvking/go-wrk:distributed /go-wrk-coordinator -port 8080
+docker run \
+--network host \
+--rm bailangvvking/go-wrk:distributed \
+/go-wrk-coordinator -port 8080
 # 工作节点1
-docker run --rm bailangvvking/go-wrk:distributed /go-wrk-worker -port 8081 -id worker1
+docker run --rm \
+--network host \
+bailangvvking/go-wrk:distributed \
+/go-wrk-worker -port 8081 -id worker1
 # 分布式
-docker run --rm bailangvvking/go-wrk:distributed /go-wrk-dist -c 100 -d 30 \
+docker run --rm \
+--network host \
+bailangvvking/go-wrk:distributed /go-wrk-dist -c 100 -d 30 \
 -coordinator "http://协调器:8080" \
   -workers "客户机1:8081,客户机2:8081" \
+  http://127.0.0.1:80
 ```
 
 

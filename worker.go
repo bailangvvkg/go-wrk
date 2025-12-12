@@ -126,10 +126,10 @@ func handleStartLoadTest(w http.ResponseWriter, r *http.Request) {
 
 	// 异步执行压测
 	go func() {
-		workerStats := runLoadTest(config)
+		workerStats, startTime, endTime := runLoadTest(config)
 		
 		// 报告结果给协调器
-		if err := reportResultsToCoordinator(config.CoordinatorURL, workerStats); err != nil {
+		if err := reportResultsToCoordinator(config.CoordinatorURL, workerStats, startTime, endTime); err != nil {
 			log.Printf("Failed to report results to coordinator: %v", err)
 		}
 
@@ -197,7 +197,7 @@ func handleHealthCheck(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func runLoadTest(config WorkerConfig) *loader.RequesterStats {
+func runLoadTest(config WorkerConfig) (*loader.RequesterStats, time.Time, time.Time) {
 	fmt.Printf("Worker %s starting load test on %s for %d seconds with %d goroutines\n",
 		workerID, config.URL, config.Duration, config.Goroutines)
 
@@ -270,10 +270,10 @@ func runLoadTest(config WorkerConfig) *loader.RequesterStats {
 	}
 	fmt.Println("=========================\n")
 
-	return aggStats
+	return aggStats, startTime, endTime
 }
 
-func reportResultsToCoordinator(coordinatorURL string, stats *loader.RequesterStats) error {
+func reportResultsToCoordinator(coordinatorURL string, stats *loader.RequesterStats, startTime, endTime time.Time) error {
 	// 准备要报告的数据
 	hostname, _ := os.Hostname()
 	if hostname == "" {
@@ -298,8 +298,8 @@ func reportResultsToCoordinator(coordinatorURL string, stats *loader.RequesterSt
 		"tot_duration": stats.TotDuration.Nanoseconds(),
 		"err_map":      stats.ErrMap,
 		"histogram":    string(histogramData),
-		"start_time":   time.Now().Add(-stats.TotDuration).Format(time.RFC3339),
-		"end_time":     time.Now().Format(time.RFC3339),
+		"start_time":   startTime.Format(time.RFC3339),
+		"end_time":     endTime.Format(time.RFC3339),
 	}
 
 	jsonData, err := json.Marshal(workerStats)
