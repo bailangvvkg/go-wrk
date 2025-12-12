@@ -322,14 +322,3 @@ func reportResultsToCoordinator(coordinatorURL string, stats *loader.RequesterSt
 	fmt.Printf("Results reported to coordinator at %s\n", coordinatorURL)
 	return nil
 }
-
-// 辅助函数：将字符串转换为io.Reader
-func stringsNewReader(s string) io.Reader {
-	return strings.NewReader(s)
-}
-
-var strings = struct {
-	NewReader func(string) io.Reader
-}{
-	NewReader: strings.NewReader,
-}
