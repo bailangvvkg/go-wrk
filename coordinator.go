@@ -56,6 +56,7 @@ type Coordinator struct {
 	statsMutex  sync.RWMutex
 	jobRequest  *JobRequest
 	results     *AggregatedResults
+	allWorkersReported bool
 }
 
 // AggregatedResults 聚合结果
@@ -130,6 +131,7 @@ func handleStartJob(w http.ResponseWriter, r *http.Request) {
 	coordinator.statsMutex.Lock()
 	coordinator.workerStats = make(map[string]*WorkerStats)
 	coordinator.jobRequest = &jobReq
+	coordinator.allWorkersReported = false
 	coordinator.results = &AggregatedResults{
 		ErrorDistribution: make(map[string]int),
 		Histogram:         histo.New(1, int64(jobReq.Duration*1000000), 4),
@@ -154,11 +156,15 @@ func handleStartJob(w http.ResponseWriter, r *http.Request) {
 		wg.Wait()
 
 		// 所有工作节点任务分发完成后，等待结果收集
-		time.Sleep(time.Duration(jobReq.Duration+5) * time.Second) // 等待压测完成 + 缓冲时间
+		// 等待足够长时间让工作节点完成测试并报告结果
+		time.Sleep(time.Duration(jobReq.Duration+10) * time.Second)
 		
 		coordinator.statsMutex.Lock()
-		coordinator.results.EndTime = time.Now()
-		coordinator.aggregateResults()
+		if !coordinator.allWorkersReported && len(coordinator.workerStats) > 0 {
+			// 即使不是所有工作节点都报告了，也使用已报告的结果
+			coordinator.results.EndTime = time.Now()
+			coordinator.aggregateResults()
+		}
 		coordinator.statsMutex.Unlock()
 	}()
 
@@ -222,6 +228,13 @@ func handleWorkerReport(w http.ResponseWriter, r *http.Request) {
 
 	coordinator.statsMutex.Lock()
 	coordinator.workerStats[stats.WorkerID] = &stats
+	
+	// 检查是否所有工作节点都已报告
+	if len(coordinator.workerStats) == len(coordinator.jobRequest.WorkerNodes) {
+		coordinator.allWorkersReported = true
+		coordinator.results.EndTime = time.Now()
+		coordinator.aggregateResults()
+	}
 	coordinator.statsMutex.Unlock()
 
 	w.Header().Set("Content-Type", "application/json")
