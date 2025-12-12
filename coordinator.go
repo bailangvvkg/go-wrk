@@ -7,14 +7,12 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"sort"
 	"strings"
 	"sync"
 	"time"
 
 	histo "github.com/HdrHistogram/hdrhistogram-go"
-	"github.com/tsliwowicz/go-wrk/loader"
 	"github.com/tsliwowicz/go-wrk/util"
 )
 

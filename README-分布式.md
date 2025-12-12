@@ -1,3 +1,20 @@
+```
+# 默认
+docker run --rm bailangvvking/go-wrk:distributed /go-wrk -c 10 -d 10 http://example.com
+# 协调器
+docker run --rm bailangvvking/go-wrk:distributed /go-wrk-coordinator -port 8080
+# 工作节点1
+docker run --rm bailangvvking/go-wrk:distributed /go-wrk-worker -port 8081 -id worker1
+# 分布式
+docker run --rm bailangvvking/go-wrk:distributed /go-wrk-dist -c 100 -d 30 \
+-coordinator "http://协调器:8080" \
+  -workers "客户机1:8081,客户机2:8081" \
+```
+
+
+
+
+
 # go-wrk 分布式压测系统
 
 这是一个基于 `go-wrk` 的分布式压测扩展，可以跨多台机器运行压力测试，突破单机带宽限制，生成更高的负载。
